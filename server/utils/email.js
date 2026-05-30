@@ -12,7 +12,7 @@ const sendOTPEmail = async (userEmail, otp, type) => {
         const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
             sender: { 
                 name: "Eventora", 
-                email: "noreply@eventora.in"     // ← Change this to your desired sender email
+                email: process.env.EMAIL_USER     // ← Change this to your desired sender email
             },
             to: [{ email: userEmail }],
             subject: title,
@@ -42,7 +42,7 @@ const sendBookingEmail = async (userEmail, userName, eventTitle) => {
         await axios.post('https://api.brevo.com/v3/smtp/email', {
             sender: { 
                 name: "Eventora", 
-                email: "noreply@eventora.in"     // ← Same here
+                email: process.env.EMAIL_USER    // ← Same here
             },
             to: [{ email: userEmail }],
             subject: `Booking Confirmed: ${eventTitle}`,
