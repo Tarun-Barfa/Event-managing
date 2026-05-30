@@ -1,74 +1,66 @@
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 const dotenv = require('dotenv');
-
 dotenv.config();
 
-console.log("EMAIL_USER:", process.env.EMAIL_USER);
-console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
-
-const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-transporter.verify((error, success) => {
-  if (error) {
-    console.log("SMTP Verify Error:", error);
-  } else {
-    console.log("Brevo SMTP Ready");
-  }
-});
-
-const sendBookingEmail = async (userEmail, userName, eventTitle) => {
-    try {
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: userEmail,
-            subject: `Booking Confirmed: ${eventTitle}`,
-            html: `
-        <h2>Hi ${userName}!</h2>
-        <p>Your booking for the event <strong>${eventTitle}</strong> is successfully confirmed.</p>
-        <p>Thank you for choosing Eventora.</p>
-      `
-        };
-        await transporter.sendMail(mailOptions);
-        console.log('Email sent successfully to', userEmail);
-    } catch (error) {
-        console.error('Error sending email:', error);
-    }
-};
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
 
 const sendOTPEmail = async (userEmail, otp, type) => {
     try {
         const title = type === 'account_verification' ? 'Verify your Eventora Account' : 'Eventora Booking Verification';
-        const msg = type === 'account_verification'
-            ? 'Please use the following OTP to verify your new Eventora account.'
-            : 'Please use the following OTP to verify and confirm your event booking.';
+        const msg = type === 'account_verification' ? 'Please use the following OTP to verify your new Eventora account.' : 'Please use the following OTP to verify and confirm your event booking.';
 
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: userEmail,
+        const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
+            sender: { 
+                name: "Eventora", 
+                email: "noreply@eventora.in"     // ← Change this to your desired sender email
+            },
+            to: [{ email: userEmail }],
             subject: title,
-            html: `
-                <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
-                    <h2 style="color: #111;">${title}</h2>
-                    <p style="color: #555; font-size: 16px;">${msg}</p>
-                    <div style="margin: 20px auto; padding: 15px; font-size: 24px; font-weight: bold; background: #f4f4f4; width: max-content; letter-spacing: 5px;">
-                        ${otp}
-                    </div>
-                    <p style="color: #999; font-size: 12px;">This code expires in 5 minutes. If you didn't request this, please ignore this email.</p>
-                </div>
+            htmlContent: `
+                <h3>${title}</h3>
+                <p>${msg}</p>
+                <h2>${otp}</h2>
+                <p>This code expires in 5 minutes.</p>
             `
-        };
-        await transporter.sendMail(mailOptions);
-        console.log(`OTP sent to ${userEmail} for ${type}`);
+        }, {
+            headers: {
+                'api-key': BREVO_API_KEY,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log(`✅ OTP sent successfully to ${userEmail}`);
+        return response.data;
     } catch (error) {
-        console.error('Error sending OTP email:', error);
+        console.error('❌ Error sending OTP email:', error.response?.data || error.message);
+        throw error;   // Important: Throw so you can see error in your route
+    }
+};
+
+const sendBookingEmail = async (userEmail, userName, eventTitle) => {
+    try {
+        await axios.post('https://api.brevo.com/v3/smtp/email', {
+            sender: { 
+                name: "Eventora", 
+                email: "noreply@eventora.in"     // ← Same here
+            },
+            to: [{ email: userEmail }],
+            subject: `Booking Confirmed: ${eventTitle}`,
+            htmlContent: `
+                <h3>Booking Confirmed: ${eventTitle}</h3>
+                <p>Hi ${userName}!</p>
+                <p>Your booking has been confirmed.</p>
+            `
+        }, {
+            headers: {
+                'api-key': BREVO_API_KEY,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log('✅ Booking email sent to', userEmail);
+    } catch (error) {
+        console.error('❌ Error sending booking email:', error.response?.data || error.message);
     }
 };
 
