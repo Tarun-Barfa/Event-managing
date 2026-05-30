@@ -1,41 +1,15 @@
 const nodemailer = require('nodemailer');
 const dotenv = require('dotenv');
 
-dotenv.config();    
-
-// console.log("User:", process.env.EMAIL_USER);
-// console.log("Pass:", process.env.EMAIL_PASS);
-
-// const transporter = nodemailer.createTransport({
-//     service: 'gmail',
-//     auth: {
-//          user: process.env.EMAIL_USER,
-//         pass: process.env.EMAIL_PASS
-//     }
-// });
-
+dotenv.config();
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
 });
-
-transporter.verify((error, success) => {
-  if (error) {
-    console.log("SMTP Verify Error:", error);
-  } else {
-    console.log("SMTP Server is ready");
-  }
-});
-
 
 const sendBookingEmail = async (userEmail, userName, eventTitle) => {
     try {
@@ -55,7 +29,6 @@ const sendBookingEmail = async (userEmail, userName, eventTitle) => {
         console.error('Error sending email:', error);
     }
 };
-
 
 const sendOTPEmail = async (userEmail, otp, type) => {
     try {
@@ -79,7 +52,6 @@ const sendOTPEmail = async (userEmail, otp, type) => {
                 </div>
             `
         };
-
         await transporter.sendMail(mailOptions);
         console.log(`OTP sent to ${userEmail} for ${type}`);
     } catch (error) {
