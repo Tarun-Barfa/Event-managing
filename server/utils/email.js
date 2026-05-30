@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 const dotenv = require('dotenv');
 
-dotenv.config();
+dotenv.config();    
 
 // console.log("User:", process.env.EMAIL_USER);
 // console.log("Pass:", process.env.EMAIL_PASS);
@@ -13,7 +13,6 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASS
     }
 });
-
 
 
 const sendBookingEmail = async (userEmail, userName, eventTitle) => {
@@ -34,7 +33,6 @@ const sendBookingEmail = async (userEmail, userName, eventTitle) => {
         console.error('Error sending email:', error);
     }
 };
-
 
 
 const sendOTPEmail = async (userEmail, otp, type) => {
